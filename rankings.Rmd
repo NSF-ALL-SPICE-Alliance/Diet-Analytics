@@ -1,0 +1,86 @@
+---
+title: "Rankings"
+author: "Connor Flynn"
+date: "8/14/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(readxl)
+library(viridis)
+library(plotly)
+```
+
+Read in Data
+
+```{r}
+rankings_data <- read_excel(here("data/food_sorting_data.xlsx"))
+```
+
+
+
+```{r}
+rankings_data
+```
+
+
+
+```{r}
+rankings_data_tidy <- rankings_data %>%
+  pivot_longer(
+    cols = starts_with(c("banana_", "apple_", "orange_", "papaya_", "avocado_", "eggplant_", 
+                         "laupele_", "rice_", "bread_", "cereal_", "breadfruit_", "eggs_", 
+                         "spam", "frychix_", "pancake_", "icecream_", "pizza_", "hamburger_", 
+                         "nuggets_", "fries_", "juices_", "soda_", "water_", "shoyuchix_", 
+                         "mackerel_", "bakedchix_", "chips_", "cookies_")),
+    names_to = "food_characteristic",
+    values_to = "value"
+  ) %>%
+  separate(food_characteristic, into = c("food", "characteristic"), sep = "_", remove = FALSE) %>%
+  select(-food_characteristic)
+```
+
+```{r}
+rankings_data_tidy
+```
+
+```{r}
+rankings_data_wide <- rankings_data_tidy %>%
+  pivot_wider(
+    names_from = characteristic,
+    values_from = value
+  )
+```
+
+
+```{r}
+plot <- ggplot(data = rankings_data_wide, 
+       aes(x = cost,
+           y = social, 
+           size = healthy,
+           color = food)) +
+  geom_point(alpha = 0.5) +
+  theme_minimal() +
+  scale_color_viridis(discrete=TRUE)
+
+ggplotly(plot)
+```
+
+```{r}
+rankings_data_tidy <- rankings_data_tidy %>% 
+  group_by(food) %>% 
+  mutate(median = median(value, na.rm = TRUE))
+```
+
+
+
+```{r}
+ggplot(data = rankings_data_tidy, aes(y = reorder(food, median), x = value, fill = characteristic)) +
+  geom_boxplot() +
+  theme_minimal() +
+  facet_wrap(~characteristic)
+```
+
