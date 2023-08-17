@@ -83,4 +83,17 @@ ggplot(data = rankings_data_tidy, aes(y = reorder(food, median), x = value, fill
   theme_minimal() +
   facet_wrap(~characteristic)
 ```
+upumoni_graph
+
+```{r}
+mean_rankings <- rankings_data_wide %>% 
+  group_by(food) %>% 
+  mutate(mean_cost=mean(cost), 
+            mean_healthy=mean(healthy),
+            mean_social=mean(social))
+```
+
+
+
+
 
