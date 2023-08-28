@@ -88,12 +88,27 @@ upumoni_graph
 ```{r}
 mean_rankings <- rankings_data_wide %>% 
   group_by(food) %>% 
-  mutate(mean_cost=mean(cost), 
-            mean_healthy=mean(healthy),
-            mean_social=mean(social))
+  summarize(mean_cost = mean(cost, na.rm = TRUE), 
+            mean_healthy = mean(healthy, na.rm = TRUE),
+            mean_social = mean(social, na.rm = TRUE))
+```
+
+```{r}
+mean_rankings_longer <- mean_rankings %>% 
+  pivot_longer(cols = mean_cost:mean_social,
+               names_to = "characteristic_mean",
+               values_to = "mean_value")
 ```
 
 
+```{r}
+ggplot(mean_rankings_longer, aes(x = mean_value, y = reorder(food, mean_value))) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~characteristic_mean) +
+  theme_minimal()
+```
+
+Cluster Analysis
 
 
 
