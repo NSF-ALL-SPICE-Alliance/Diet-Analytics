@@ -1,0 +1,45 @@
+---
+title: "Adolescents food rankings"
+output: html_document
+date: "2023-10-13"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(readxl)
+library(viridis)
+library(plotly)
+library(janitor)
+library(naniar)
+library(ggpubr)
+library(GGally)
+
+options(scipen = 99)
+```
+
+Read in data
+
+```{r}
+food_sorting <- read_excel(here("data/food_sorting_data.xlsx"))
+
+```
+
+```{r}
+food_sorting_tidy <- food_sorting %>%
+  pivot_longer(
+    cols = starts_with(c("banana_", "apple_", "orange_", "papaya_", "avocado_", "eggplant_", 
+                         "laupele_", "rice_", "bread_", "cereal_", "breadfruit_", "eggs_", 
+                         "spam", "frychix_", "pancake_", "icecream_", "pizza_", "hamburger_", 
+                         "nuggets_", "fries_", "juices_", "soda_", "water_", "shoyuchix_", 
+                         "mackerel_", "bakedchix_", "chips_", "cookies_")),
+    names_to = "food_characteristic",
+    values_to = "value"
+  ) %>%
+  separate(food_characteristic, into = c("food", "characteristic"), sep = "_", remove = FALSE) %>%
+  select(-food_characteristic)
+
+```
+
