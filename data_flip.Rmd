@@ -1,0 +1,150 @@
+---
+title: "Data Flip"
+author: "Connor Flynn"
+date: "9/27/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(readxl)
+library(viridis)
+library(plotly)
+library(janitor)
+library(naniar)
+library(ggpubr)
+library(GGally)
+
+options(scipen = 99)
+```
+
+Read in Data
+
+```{r}
+rankings_data <- read_excel(here("data/food_sorting_data.xlsx"))
+```
+
+
+
+```{r}
+rankings_data
+```
+
+
+
+```{r}
+rankings_data_tidy <- rankings_data %>%
+  pivot_longer(
+    cols = starts_with(c("banana_", "apple_", "orange_", "papaya_", "avocado_", "eggplant_", 
+                         "laupele_", "rice_", "bread_", "cereal_", "breadfruit_", "eggs_", 
+                         "spam", "frychix_", "pancake_", "icecream_", "pizza_", "hamburger_", 
+                         "nuggets_", "fries_", "juices_", "soda_", "water_", "shoyuchix_", 
+                         "mackerel_", "bakedchix_", "chips_", "cookies_")),
+    names_to = "food_characteristic",
+    values_to = "value"
+  ) %>%
+  separate(food_characteristic, into = c("food", "characteristic"), sep = "_", remove = FALSE) %>%
+  select(-food_characteristic)
+```
+
+```{r}
+rankings_data_tidy
+```
+
+
+
+
+Flip it!
+
+```{r}
+rankings_data_tidy_flipped <- rankings_data_tidy %>%
+  mutate(value = max(value, na.rm = TRUE) + 1 - value)
+```
+
+
+```{r}
+rankings_data_tidy_flipped <- rankings_data_tidy_flipped %>% 
+  group_by(food) %>% 
+  mutate(median = median(value, na.rm = TRUE))
+```
+
+
+
+```{r}
+ggplot(data = rankings_data_tidy_flipped, aes(y = reorder(food, median), x = value, fill = characteristic)) +
+  geom_boxplot() +
+  theme_minimal() +
+  facet_wrap(~characteristic)
+```
+
+Scatter Plots and Stats
+
+```{r}
+rankings_data_wide <- rankings_data_tidy_flipped %>%
+  pivot_wider(
+    names_from = characteristic,
+    values_from = value
+  )
+```
+
+
+```{r}
+# Create the scatter plot with ggplot
+ggplot(rankings_data_wide, aes(x = cost, y = social)) +
+  geom_point() +  # Add points
+  geom_smooth(method = "lm", color = "blue") + 
+  stat_cor() +# Add a linear regression line
+  theme_minimal()   +# Apply a minimal theme
+  ylim(0, 35)
+
+
+```
+
+
+```{r}
+plot <- ggplot(data = rankings_data_wide, 
+       aes(x = cost,
+           y = social, 
+           size = healthy,
+           color = food)) +
+  geom_point(alpha = 0.5) +
+  theme_minimal() +
+  scale_color_viridis(discrete=TRUE)
+
+ggplotly(plot)
+```
+
+
+
+
+Correlation Matrix
+
+
+
+```{r}
+rankings_data_wide_no_na <- drop_na(rankings_data_wide)
+
+rankings_data_wide_corr <- rankings_data_wide_no_na %>% 
+  clean_names() %>% 
+  ungroup() %>% 
+  select(-participant_id, -median, -food) 
+```
+
+```{r}
+# Create a correlation matrix
+
+
+corr <- cor(rankings_data_wide_corr)
+
+corr_data_frame <- as.data.frame(corr)
+```
+
+
+```{r}
+
+ 
+# Nice visualization of correlations
+ggcorr(corr_data_frame, method = c("everything", "pearson")) 
+```
