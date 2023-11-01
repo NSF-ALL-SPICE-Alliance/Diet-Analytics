@@ -12,6 +12,8 @@ library(here)
 library(readxl)
 library(viridis)
 library(plotly)
+library(janitor)
+library(naniar)
 ```
 
 Read in Data
@@ -46,6 +48,9 @@ rankings_data_tidy <- rankings_data %>%
 ```{r}
 rankings_data_tidy
 ```
+
+
+
 
 ```{r}
 rankings_data_wide <- rankings_data_tidy %>%
@@ -110,5 +115,90 @@ ggplot(mean_rankings_longer, aes(x = mean_value, y = reorder(food, mean_value)))
 
 Cluster Analysis
 
+```{r}
+rankings_data_wide <- rankings_data_wide %>% 
+  clean_names()
+```
 
+
+
+```{r}
+null_participants <- c("5", "29", "31", "32")
+
+rankings_data_tidy <- rankings_data_tidy %>% 
+  clean_names()
+
+rankings_data_tidy_no_na <- rankings_data_tidy %>% 
+  filter(! participant_id %in% null_participants)
+
+unique(rankings_data_tidy_no_na$participant_id)
+
+rankings_data_tidy_no_na <- rankings_data_tidy_no_na %>% 
+  select(-median)
+```
+
+```{r}
+rankings_data_tidy_no_na <- rankings_data_tidy_no_na %>%
+  unite(participant_characteristic, characteristic, participant_id, sep = "_")
+
+```
+
+```{r}
+rankings_data_tidy_no_na <- rankings_data_tidy_no_na %>% 
+  pivot_wider(names_from = participant_characteristic,
+              values_from = value)
+```
+
+```{r}
+sum(is.na(rankings_data_tidy_no_na))
+```
+
+```{r}
+gg_miss_var(rankings_data_tidy_no_na)
+```
+```{r}
+
+rankings_data_tidy_no_na[is.nan(rankings_data_tidy_no_na)] <- NA
+
+
+rankings_data_tidy_no_na <- rankings_data_tidy_no_na %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
+```
+
+```{r}
+sum(is.na(rankings_data_tidy_no_na))
+```
+
+
+Correlation Matrix
+
+```{r}
+rankings_data_wide_no_na <- drop_na(rankings_data_wide)
+
+rankings_data_wide_corr <- rankings_data_wide_no_na %>% 
+  select(-participant_id, -food)
+```
+
+```{r}
+# Create a correlation matrix
+
+
+corr <- cor(rankings_data_wide_corr)
+
+corr_data_frame <- as.data.frame(corr)
+```
+
+
+```{r}
+library(GGally)
+ 
+# Nice visualization of correlations
+ggcorr(corr_data_frame, method = c("everything", "pearson")) 
+```
+
+
+
+One graph at a time for cost, healthy, social
+
+Include cost and social status in box plot looking at all of the food items
 

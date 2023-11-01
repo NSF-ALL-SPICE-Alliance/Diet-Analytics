@@ -79,6 +79,21 @@ ggplot(data = rankings_data_tidy_flipped, aes(y = reorder(food, median), x = val
   facet_wrap(~characteristic)
 ```
 
+```{r}
+rankings_data_tidy_flipped_cost <- rankings_data_tidy_flipped %>% 
+  filter(characteristic == "cost")
+
+ggplot(data = rankings_data_tidy_flipped_cost, aes(y = reorder(food, median), x = value, fill = characteristic)) +
+  geom_boxplot() +
+  theme_minimal()
+```
+
+
+
+
+
+
+
 Scatter Plots and Stats
 
 ```{r}
