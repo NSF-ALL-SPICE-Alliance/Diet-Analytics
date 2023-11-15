@@ -55,13 +55,47 @@ rankings_data_tidy
 
 
 
-
 Flip it!
 
 ```{r}
 rankings_data_tidy_flipped <- rankings_data_tidy %>%
   mutate(value = max(value, na.rm = TRUE) + 1 - value)
 ```
+
+
+
+```{r}
+rankings_data_tidy_flipped_mean <- rankings_data_tidy_flipped %>% 
+  group_by(food, characteristic) %>% 
+  summarise(mean = mean(value, na.rm = TRUE))
+```
+
+```{r}
+rankings_data_tidy_flipped_mean_wider <- rankings_data_tidy_flipped_mean %>% 
+  pivot_wider(names_from = characteristic, 
+              values_from = mean)
+```
+
+
+```{r}
+ggplot(data = rankings_data_tidy_flipped_mean_wider, aes(x = cost,
+                                                 y = social,
+                                                 label = food)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue") + 
+  stat_cor() +# Add a linear regression line
+  theme_minimal() +
+  geom_text(hjust=0, vjust=0) +
+  labs(title = "Average Social Rankings vs Average Cost Ranking",
+       x = "Cost (least expensive to most expensive)",
+       y = "Social Status (least popular to most popular)")
+```
+
+
+
+
+
+
 
 
 ```{r}
