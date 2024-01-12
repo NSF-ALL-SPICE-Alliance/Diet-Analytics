@@ -16,25 +16,30 @@ library(janitor)
 library(naniar)
 library(ggpubr)
 library(GGally)
+library(corrplot)
 
 options(scipen = 99)
 ```
 
+
+The purpose of this Rmd is to explore data collected by Matau Faiai for her PhD Dissertation (Yale School of Epidemiology)
+
+
 Read in Data
 
-```{r}
+```{r, include=FALSE}
 rankings_data <- read_excel(here("data/food_sorting_data.xlsx"))
 ```
 
 
 
-```{r}
+```{r, include=FALSE}
 rankings_data
 ```
 
 
 
-```{r}
+```{r, include=FALSE}
 rankings_data_tidy <- rankings_data %>%
   pivot_longer(
     cols = starts_with(c("banana_", "apple_", "orange_", "papaya_", "avocado_", "eggplant_", 
@@ -49,7 +54,7 @@ rankings_data_tidy <- rankings_data %>%
   select(-food_characteristic)
 ```
 
-```{r}
+```{r, include=FALSE}
 rankings_data_tidy
 ```
 
@@ -57,27 +62,27 @@ rankings_data_tidy
 
 Flip it!
 
-```{r}
+```{r, include=FALSE}
 rankings_data_tidy_flipped <- rankings_data_tidy %>%
   mutate(value = max(value, na.rm = TRUE) + 1 - value)
 ```
 
 
 
-```{r}
+```{r, include=FALSE}
 rankings_data_tidy_flipped_mean <- rankings_data_tidy_flipped %>% 
   group_by(food, characteristic) %>% 
   summarise(mean = mean(value, na.rm = TRUE))
 ```
 
-```{r}
+```{r, include=FALSE}
 rankings_data_tidy_flipped_mean_wider <- rankings_data_tidy_flipped_mean %>% 
   pivot_wider(names_from = characteristic, 
               values_from = mean)
 ```
 
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(data = rankings_data_tidy_flipped_mean_wider, aes(x = cost,
                                                  y = social,
                                                  label = food)) +
@@ -98,7 +103,7 @@ ggplot(data = rankings_data_tidy_flipped_mean_wider, aes(x = cost,
 
 
 
-```{r}
+```{r, include=FALSE}
 rankings_data_tidy_flipped <- rankings_data_tidy_flipped %>% 
   group_by(food) %>% 
   mutate(median = median(value, na.rm = TRUE))
@@ -106,14 +111,14 @@ rankings_data_tidy_flipped <- rankings_data_tidy_flipped %>%
 
 
 
-```{r}
+```{r, echo=FALSE}
 ggplot(data = rankings_data_tidy_flipped, aes(y = reorder(food, median), x = value, fill = characteristic)) +
   geom_boxplot() +
   theme_minimal() +
   facet_wrap(~characteristic)
 ```
 
-```{r}
+```{r, include=FALSE}
 rankings_data_tidy_flipped_cost <- rankings_data_tidy_flipped %>% 
   filter(characteristic == "cost")
 
@@ -130,7 +135,7 @@ ggplot(data = rankings_data_tidy_flipped_cost, aes(y = reorder(food, median), x 
 
 Scatter Plots and Stats
 
-```{r}
+```{r, include=FALSE}
 rankings_data_wide <- rankings_data_tidy_flipped %>%
   pivot_wider(
     names_from = characteristic,
@@ -139,7 +144,7 @@ rankings_data_wide <- rankings_data_tidy_flipped %>%
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 # Create the scatter plot with ggplot
 ggplot(rankings_data_wide, aes(x = cost, y = social)) +
   geom_point() +  # Add points
@@ -152,7 +157,7 @@ ggplot(rankings_data_wide, aes(x = cost, y = social)) +
 ```
 
 
-```{r}
+```{r, echo = FALSE}
 plot <- ggplot(data = rankings_data_wide, 
        aes(x = cost,
            y = social, 
@@ -172,7 +177,7 @@ Correlation Matrix
 
 
 
-```{r}
+```{r, include=FALSE}
 rankings_data_wide_no_na <- drop_na(rankings_data_wide)
 
 rankings_data_wide_corr <- rankings_data_wide_no_na %>% 
@@ -181,19 +186,19 @@ rankings_data_wide_corr <- rankings_data_wide_no_na %>%
   select(-participant_id, -median, -food) 
 ```
 
-```{r}
+```{r, include=FALSE}
 # Create a correlation matrix
 
 
 corr <- cor(rankings_data_wide_corr)
 
-corr_data_frame <- as.data.frame(corr)
+
 ```
 
 
-```{r}
 
- 
-# Nice visualization of correlations
-ggcorr(corr_data_frame, method = c("everything", "pearson")) 
+```{r, echo = FALSE}
+
+# Plot the correlation matrix with text labels
+corrplot(corr, method = "circle", type = "lower", tl.col = "black", diag = FALSE, addCoef.col ='black')
 ```
